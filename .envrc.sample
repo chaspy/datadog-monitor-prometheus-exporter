@@ -1,1 +1,2 @@
 export DD_API_KEY="secret"
+export DD_APP_KEY="secret"
