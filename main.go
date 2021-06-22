@@ -28,12 +28,14 @@ var (
 )
 
 func main() {
+	fmt.Println("main")
 	if err := core(); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func core() error {
+	fmt.Println("core")
 	interval, err := getInterval()
 	if err != nil {
 		return err
@@ -68,9 +70,11 @@ func core() error {
 }
 
 func snapshot() error {
+	fmt.Println("snapshot")
 	DatadogMonitorAlert.Reset()
 
-	monitors, err := getMonitors()
+	_, err := getMonitors()
+	//monitors, err := getMonitors()
 	if err != nil {
 		return fmt.Errorf("failed to get monitors: %w", err)
 	}
@@ -95,7 +99,7 @@ func snapshot() error {
 
 	*/
 
-	fmt.Printf("%v\n", monitors)
+	//fmt.Printf("%v\n", monitors)
 	return nil
 }
 
@@ -129,6 +133,7 @@ func readDatadogConfig() error {
 }
 
 func getMonitors() ([]byte, error) {
+	fmt.Println("get monitors")
 	ctx := datadog.NewDefaultContext(context.Background())
 
 	groupStates := ""      // string | When specified, shows additional information about the group states. Choose one or more from `all`, `alert`, `warn`, and `no data`. (optional)
@@ -157,14 +162,21 @@ func getMonitors() ([]byte, error) {
 	resp, r, err := apiClient.MonitorsApi.ListMonitors(ctx, optionalParams)
 
 	// debug
-	// fmt.Printf("%v", r)
+	fmt.Printf("%v\n", r)
 	// debug
-	// fmt.Printf("%v", err)
+	fmt.Printf("%v\n", err)
 	// debug
-	// fmt.Printf("%v", resp)
+	fmt.Printf("%v\n", resp)
 
 	if err != nil {
-		return []byte(""), fmt.Errorf("failed to call `MonitorsApi.ListMonitors`: %w", err)
+		// I am not sure of the conditions under which this occurs.
+		// This error may occur depending on the condition of the monitor to be acquired.
+		if err.Error() == "json: cannot unmarshal string into Go struct field MonitorThresholds.options.thresholds.warning of type float64" {
+			fmt.Fprintf(os.Stdout, "Warning: Caught json.UnmarshalTypeError")
+			// fmt.Fprintf(os.Stdout, "Full HTTP response: %v\n", resp)
+		} else {
+			return []byte(""), fmt.Errorf("failed to call `MonitorsApi.ListMonitors`: %w", err)
+		}
 	}
 	defer r.Body.Close()
 
@@ -175,7 +187,7 @@ func getMonitors() ([]byte, error) {
 	}
 
 	// debug
-	fmt.Fprintf(os.Stdout, "Response from MonitorsApi.ListMonitors:\n%s\n", responseContent)
+	//fmt.Fprintf(os.Stdout, "Response from MonitorsApi.ListMonitors:\n%s\n", responseContent)
 
 	return responseContent, nil
 }
