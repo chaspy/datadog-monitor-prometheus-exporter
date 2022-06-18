@@ -14,7 +14,7 @@ RUN go build \
     -o /go/bin/datadog-monitor-prometheus-exporter \
     -ldflags '-s -w'
 
-FROM alpine:3.13.5 as runner
+FROM alpine:3.16.0 as runner
 
 COPY --from=builder /go/bin/datadog-monitor-prometheus-exporter /app/datadog-monitor-prometheus-exporter
 
